@@ -5,12 +5,11 @@ import (
 	"log"
 
 	"github.com/alecthomas/kong"
-	cli "github.com/threepipes/ccienv"
 )
 
 type Context struct {
 	ctx    context.Context
-	client *cli.Client
+	client *Client
 }
 
 type RmCmd struct {
@@ -42,9 +41,9 @@ func handleErr(err error) {
 }
 
 func main() {
-	cfg, err := cli.SetConfigFromEnv()
+	cfg, err := SetConfigFromEnv()
 	handleErr(err)
-	client, err := cli.NewClient(cfg, cfg.ProjectSlug)
+	client, err := NewClient(cfg, cfg.ProjectSlug)
 	handleErr(err)
 
 	ctx := context.Background()
