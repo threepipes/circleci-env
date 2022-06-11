@@ -77,6 +77,7 @@ func (c *Client) DeleteVariables(ctx context.Context, vars []string) error {
 	if pv.NextPageToken != "" {
 		logrus.Warn("Warning! Not all variables are listed.")
 	}
+
 	dels := getIntersection(vars, pv.Items)
 	if len(dels) == 0 {
 		fmt.Println("There are no deleted variables.")

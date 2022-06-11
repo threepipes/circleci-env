@@ -15,7 +15,7 @@ type Context struct {
 }
 
 type RmCmd struct {
-	Envs []string `arg:"" name:"env" help:"Environment variables to remove." type:"env"`
+	Envs []string `arg:"" name:"env" help:"Environment variables to remove."`
 }
 
 func (r *RmCmd) Run(c *Context) error {
@@ -32,8 +32,8 @@ func (l *LsCmd) Run(c *Context) error {
 }
 
 type AddCmd struct {
-	Name  string `arg:"" name:"name" help:"Environment variable name to be add"`
-	Value string `arg:"" name:"value" help:"Environment variable value to be add"`
+	Name  string `arg:"" name:"name" help:"Environment variable name to be add."`
+	Value string `arg:"" name:"value" help:"Environment variable value to be add."`
 }
 
 func (l *AddCmd) Run(c *Context) error {
@@ -42,7 +42,7 @@ func (l *AddCmd) Run(c *Context) error {
 }
 
 var cmd struct {
-	Repo string `required:"" help:"Your target repository name."`
+	Repo string `required:"" help:"Set your target repository name."`
 
 	Rm  RmCmd  `cmd:"" help:"Remove environment variables."`
 	Ls  LsCmd  `cmd:"" help:"List environment variables."`
