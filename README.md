@@ -9,6 +9,11 @@ Manage CircleCI Project's Environment Variables.
 go install github.com/threepipes/ccienv@latest
 ```
 
+uninstall
+```
+rm $(which ccienv)
+```
+
 # Setup local environment
 
 Set these environment variables to run the command.
