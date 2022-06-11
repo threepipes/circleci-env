@@ -1,12 +1,12 @@
 # ccienv
 
-Manage CircleCI Project's Environment Variables.
+Manage CircleCI Project's Environment Variables.  
 (Currently, only available on github)
 
-# Installation
+## Installation
 
 ```
-go install github.com/threepipes/ccienv@latest
+go install github.com/threepipes/circleci-cli/cmd/ccienv@latest
 ```
 
 uninstall
@@ -14,7 +14,7 @@ uninstall
 rm $(which ccienv)
 ```
 
-# Setup local environment
+## Setup local environment
 
 Set these environment variables to run the command.
 - CIRCLECI_API_TOKEN
@@ -22,7 +22,7 @@ Set these environment variables to run the command.
 - CIRCLECI_ORGANIZATION_NAME
     - Organization name or github username of your repository
 
-# Run
+## Run
 
 ```
 ccienv --repo <your_repo_name> <cmd> [<args>]
