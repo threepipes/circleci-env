@@ -1,1 +1,3 @@
-# circleci-manager
+# ccienv
+
+Manage CircleCI Project's Environment Variables.
