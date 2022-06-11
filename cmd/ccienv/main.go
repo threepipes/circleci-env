@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/alecthomas/kong"
-	cli "github.com/threepipes/circleci-cli"
+	cli "github.com/threepipes/circleci-env"
 )
 
 type Context struct {

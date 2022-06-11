@@ -1,4 +1,4 @@
-module github.com/threepipes/circleci-cli
+module github.com/threepipes/circleci-env
 
 go 1.17
 

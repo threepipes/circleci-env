@@ -1,12 +1,12 @@
 # ccienv
 
-Manage CircleCI Project's Environment Variables.  
-(Currently, only available on github)
+A management tool for CircleCI Project's Environment Variables.  
+(Currently, only available on GitHub)
 
 ## Installation
 
 ```
-go install github.com/threepipes/circleci-cli/cmd/ccienv@latest
+go install github.com/threepipes/circleci-env/cmd/ccienv@latest
 ```
 
 uninstall
@@ -30,7 +30,7 @@ ccienv --repo <your_repo_name> <cmd> [<args>]
 
 example.
 ```
-ccienv --repo circleci-cli ls
+ccienv --repo circleci-env ls
 ```
 
 ## Help
