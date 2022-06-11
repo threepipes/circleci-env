@@ -3,8 +3,8 @@ package cli
 import "github.com/kelseyhightower/envconfig"
 
 type Config struct {
-	CircleciApiToken string `split_words:"true"`
-	ProjectSlug      string `split_words:"true"`
+	CircleciApiToken         string `split_words:"true"`
+	CircleciOrganizationName string `split_words:"true"`
 }
 
 func SetConfigFromEnv() (*Config, error) {
