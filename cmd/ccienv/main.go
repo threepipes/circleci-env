@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/sirupsen/logrus"
 	cli "github.com/threepipes/circleci-env"
 )
 
@@ -15,20 +16,31 @@ type Context struct {
 }
 
 type RmCmd struct {
-	Envs []string `arg:"" name:"env" help:"Environment variables to remove."`
+	Envs        []string `arg:"" optional:"" name:"env_name" help:"Environment variable names to remove."`
+	Interactive bool     `optional:"" name:"interactive" short:"i" help:"Launch interactive removal mode."`
 }
 
 func (r *RmCmd) Run(c *Context) error {
-	c.client.DeleteVariables(c.ctx, r.Envs)
-	return nil
+	if len(r.Envs) > 0 && r.Interactive {
+		fmt.Println("InvalidArgumentError: Do not specify both args `envs` and `-i, --interactive` in `rm` command.")
+		return nil
+	}
+	if r.Interactive {
+		return c.client.DeleteVariablesInteractive(c.ctx)
+	} else {
+		if len(r.Envs) == 0 {
+			fmt.Println("InvalidArgumentError: Please specify at least one environment variable or set `-i`.")
+			return nil
+		}
+		return c.client.DeleteVariables(c.ctx, r.Envs)
+	}
 }
 
 type LsCmd struct {
 }
 
 func (l *LsCmd) Run(c *Context) error {
-	c.client.ListVariables(c.ctx)
-	return nil
+	return c.client.ListVariables(c.ctx)
 }
 
 type AddCmd struct {
@@ -37,21 +49,22 @@ type AddCmd struct {
 }
 
 func (l *AddCmd) Run(c *Context) error {
-	c.client.UpdateOrCreateVariable(c.ctx, l.Name, l.Value)
-	return nil
+	return c.client.UpdateOrCreateVariable(c.ctx, l.Name, l.Value)
 }
 
 var cmd struct {
-	Repo string `required:"" help:"Set your target repository name."`
+	Repo string `required:"" short:"r" help:"Set your target repository name."`
 
-	Rm  RmCmd  `cmd:"" help:"Remove environment variables."`
+	Rm  RmCmd  `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
 	Ls  LsCmd  `cmd:"" help:"List environment variables."`
 	Add AddCmd `cmd:"" help:"Add an environment variable."`
 }
 
 func handleErr(err error) {
+	// FIXME: introduce error type
 	if err != nil {
-		log.Fatalln(err)
+		logrus.WithField("error", err).Error("Internal error occured.")
+		os.Exit(1)
 	}
 }
 
@@ -70,5 +83,5 @@ func main() {
 
 	ctx := context.Background()
 	err = kc.Run(&Context{ctx, client})
-	kc.FatalIfErrorf(err)
+	handleErr(err)
 }

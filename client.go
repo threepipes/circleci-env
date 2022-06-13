@@ -1,11 +1,8 @@
 package cli
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/grezar/go-circleci"
 	"github.com/sirupsen/logrus"
@@ -29,26 +26,30 @@ func NewClient(cfg *Config, prj string) (*Client, error) {
 	}, nil
 }
 
-func promptYesNo(msg string) (bool, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("%s [Y/n]? :", msg)
-	yn, err := reader.ReadString('\n')
-	if err != nil {
-		return false, fmt.Errorf("prompt: %w", err)
-	}
-	return len(yn) > 0 && strings.ToLower(yn)[0] == 'y', nil
-}
-
-func dumpVariables(items []*circleci.ProjectVariable) {
+func getMaxNameLength(pv []*circleci.ProjectVariable) int {
 	maxlen := 0
-	for _, v := range items {
+	for _, v := range pv {
 		if len(v.Name) > maxlen {
 			maxlen = len(v.Name)
 		}
 	}
-	for _, v := range items {
+	return maxlen
+}
+
+func dumpVariables(pv []*circleci.ProjectVariable) {
+	maxlen := getMaxNameLength(pv)
+	for _, v := range pv {
 		fmt.Printf("%-*s %s\n", maxlen, v.Name, v.Value)
 	}
+}
+
+func convertToString(pv []*circleci.ProjectVariable) []string {
+	maxlen := getMaxNameLength(pv)
+	res := make([]string, len(pv))
+	for i, v := range pv {
+		res[i] = fmt.Sprintf("%-*s %s", maxlen, v.Name, v.Value)
+	}
+	return res
 }
 
 func getIntersection(vars []string, items []*circleci.ProjectVariable) []*circleci.ProjectVariable {
@@ -69,6 +70,69 @@ func getIntersection(vars []string, items []*circleci.ProjectVariable) []*circle
 	return dels
 }
 
+func (c *Client) deleteVariables(ctx context.Context, dels []*circleci.ProjectVariable) error {
+	if len(dels) == 0 {
+		return fmt.Errorf("no values are specified")
+	}
+
+	fmt.Println("These variables will be removed.")
+	fmt.Println()
+	dumpVariables(dels)
+	fmt.Println()
+
+	yes, err := PromptYesNo("Do you want to continue?")
+	if err != nil {
+		return fmt.Errorf("delete vars: %w", err)
+	}
+	if !yes {
+		fmt.Println("Cancelled.")
+		return nil
+	}
+
+	for _, v := range dels {
+		if err := c.ci.Projects.DeleteVariable(ctx, c.projectSlug, v.Name); err != nil {
+			logrus.WithField("key", v).Errorf("Failed to delete: %v\n", err)
+		} else {
+			fmt.Printf("Deleted: %s=%s\n", v.Name, v.Value)
+		}
+	}
+	return nil
+}
+
+func makeReverseResolutionMap(vs []string) map[string]int {
+	mp := make(map[string]int, 0)
+	for i, v := range vs {
+		mp[v] = i
+	}
+	// For any `key` in vs, vs[mp[key]] == key
+	return mp
+}
+
+func (c *Client) DeleteVariablesInteractive(ctx context.Context) error {
+	// Should be tested
+
+	pv, err := c.ci.Projects.ListVariables(ctx, c.projectSlug)
+	if err != nil {
+		return fmt.Errorf("delete vars: %w", err)
+	}
+	if pv.NextPageToken != "" {
+		logrus.Warn("Warning! Not all variables are listed.")
+	}
+	spv := convertToString(pv.Items)
+	sel, err := SelectFromList("Choose variables to be deleted.", spv)
+	if err != nil {
+		return fmt.Errorf("delete vars: %w", err)
+	}
+
+	rrm := makeReverseResolutionMap(spv)
+	dels := make([]*circleci.ProjectVariable, len(sel))
+	for i, s := range sel {
+		dels[i] = pv.Items[rrm[s]]
+	}
+
+	return c.deleteVariables(ctx, dels)
+}
+
 func (c *Client) DeleteVariables(ctx context.Context, vars []string) error {
 	pv, err := c.ci.Projects.ListVariables(ctx, c.projectSlug)
 	if err != nil {
@@ -83,29 +147,7 @@ func (c *Client) DeleteVariables(ctx context.Context, vars []string) error {
 		fmt.Println("There are no deleted variables.")
 		return nil
 	}
-
-	fmt.Println("These variables will be removed.")
-	fmt.Println()
-	dumpVariables(dels)
-	fmt.Println()
-
-	yes, err := promptYesNo("Do you want to continue?")
-	if err != nil {
-		return fmt.Errorf("delete vars: %w", err)
-	}
-	if !yes {
-		fmt.Println("Cancelled.")
-		return nil
-	}
-
-	for _, v := range dels {
-		if err := c.ci.Projects.DeleteVariable(ctx, c.projectSlug, v.Name); err != nil {
-			logrus.WithField("key", v).Errorf("Failed to delete: %v\n", err)
-		} else {
-			fmt.Printf("Deleted: %s\n", v)
-		}
-	}
-	return nil
+	return c.deleteVariables(ctx, dels)
 }
 
 func (c *Client) UpdateOrCreateVariable(ctx context.Context, key string, val string) error {
@@ -115,7 +157,7 @@ func (c *Client) UpdateOrCreateVariable(ctx context.Context, key string, val str
 	}
 	if v != nil {
 		fmt.Printf("key:%s already exists as value=%s\n", v.Name, v.Value)
-		yes, err := promptYesNo("Do you want to overwrite?")
+		yes, err := PromptYesNo("Do you want to overwrite?")
 		if err != nil {
 			return err
 		}
@@ -136,10 +178,6 @@ func (c *Client) UpdateOrCreateVariable(ctx context.Context, key string, val str
 }
 
 func (c *Client) ListVariables(ctx context.Context) error {
-	/*
-		TODO: use nextPageToken
-		Currently, number of variables on the project is less than 50.
-	*/
 	vars, err := c.ci.Projects.ListVariables(ctx, c.projectSlug)
 	if err != nil {
 		return fmt.Errorf("list vars: %w", err)
