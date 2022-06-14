@@ -1,6 +1,6 @@
 # ccienv
 
-A management tool for CircleCI Project's Environment Variables.  
+A management tool for CircleCI Project's environment variables.  
 (Currently, only available on GitHub)
 
 ## Installation
@@ -9,28 +9,31 @@ A management tool for CircleCI Project's Environment Variables.
 go install github.com/threepipes/circleci-env/cmd/ccienv@latest
 ```
 
-uninstall
+### Uninstallation
+
 ```
 rm $(which ccienv)
 ```
 
 ## Setup local environment
 
-Set these environment variables to run the command.
+These environment variables are required.
+
 - CIRCLECI_API_TOKEN
-    - A personal api token of CircleCI
+    - A personal API token of CircleCI
 - CIRCLECI_ORGANIZATION_NAME
-    - Organization name or github username of your repository
+    - GitHub organization name or GitHub username of your repository
 
 ## Run
 
 ```
-ccienv --repo <your_repo_name> <cmd> [<args>]
+ccienv -r <your_repo_name> <cmd> [<args>]
 ```
 
-example.
+### Example
+
 ```
-ccienv --repo circleci-env ls
+ccienv -r circleci-env ls
 ```
 
 ## Help
