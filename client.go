@@ -52,22 +52,23 @@ func convertToString(pv []*circleci.ProjectVariable) []string {
 	return res
 }
 
-func getIntersection(vars []string, items []*circleci.ProjectVariable) []*circleci.ProjectVariable {
-	curs := make(map[string]interface{}, 0)
-	var t interface{}
-	for _, v := range vars {
-		curs[v] = t
+func getFoundAndNotFoundVariables(vars []string, items []*circleci.ProjectVariable) ([]*circleci.ProjectVariable, []string) {
+	mp := make(map[string]*circleci.ProjectVariable, 0)
+	for _, v := range items {
+		mp[v.Name] = v
 	}
 
-	dels := make([]*circleci.ProjectVariable, 0)
-	for _, v := range items {
-		_, prs := curs[v.Name]
+	in := make([]*circleci.ProjectVariable, 0)
+	out := make([]string, 0)
+	for _, v := range vars {
+		pv, prs := mp[v]
 		if !prs {
-			continue
+			out = append(out, v)
+		} else {
+			in = append(in, pv)
 		}
-		dels = append(dels, v)
 	}
-	return dels
+	return in, out
 }
 
 func (c *Client) deleteVariables(ctx context.Context, dels []*circleci.ProjectVariable) error {
@@ -93,7 +94,7 @@ func (c *Client) deleteVariables(ctx context.Context, dels []*circleci.ProjectVa
 		if err := c.ci.Projects.DeleteVariable(ctx, c.projectSlug, v.Name); err != nil {
 			logrus.WithField("key", v).Errorf("Failed to delete: %v\n", err)
 		} else {
-			fmt.Printf("Deleted: %s=%s\n", v.Name, v.Value)
+			fmt.Printf("Deleted: %s\n", v.Name)
 		}
 	}
 	return nil
@@ -142,7 +143,14 @@ func (c *Client) DeleteVariables(ctx context.Context, vars []string) error {
 		logrus.Warn("Warning! Not all variables are listed.")
 	}
 
-	dels := getIntersection(vars, pv.Items)
+	dels, nonDels := getFoundAndNotFoundVariables(vars, pv.Items)
+	if len(nonDels) > 0 {
+		fmt.Println("These variables are not found.")
+		for _, v := range nonDels {
+			fmt.Println("  " + v)
+		}
+		fmt.Println()
+	}
 	if len(dels) == 0 {
 		fmt.Println("There are no deleted variables.")
 		return nil

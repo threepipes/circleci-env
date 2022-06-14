@@ -7,17 +7,17 @@ import (
 	"github.com/grezar/go-circleci"
 )
 
-func Test_getIntersection(t *testing.T) {
+func Test_getFoundAndNotFoundVariables(t *testing.T) {
 	type args struct {
 		vars  []string
 		items []*circleci.ProjectVariable
 	}
 	tests := []struct {
-		name string
-		args args
-		want []*circleci.ProjectVariable
+		name  string
+		args  args
+		want  []*circleci.ProjectVariable
+		want1 []string
 	}{
-		// TODO: Add test cases.
 		{
 			name: "simple array",
 			args: args{
@@ -28,6 +28,9 @@ func Test_getIntersection(t *testing.T) {
 			},
 			want: []*circleci.ProjectVariable{
 				&circleci.ProjectVariable{Name: "ENV_1", Value: "xxxxenv"},
+			},
+			want1: []string{
+				"ENV_0", "ENV_2",
 			},
 		},
 		{
@@ -44,6 +47,9 @@ func Test_getIntersection(t *testing.T) {
 				&circleci.ProjectVariable{Name: "ENV_1", Value: "xxxxenv"},
 				&circleci.ProjectVariable{Name: "ENV_2", Value: "xxxxenv"},
 			},
+			want1: []string{
+				"ENV_0",
+			},
 		},
 		{
 			name: "no intersection",
@@ -54,6 +60,9 @@ func Test_getIntersection(t *testing.T) {
 				},
 			},
 			want: []*circleci.ProjectVariable{},
+			want1: []string{
+				"ENV_0", "ENV_1", "ENV_2",
+			},
 		},
 		{
 			name: "no envs",
@@ -61,7 +70,8 @@ func Test_getIntersection(t *testing.T) {
 				vars:  []string{"ENV_0", "ENV_1", "ENV_2"},
 				items: []*circleci.ProjectVariable{},
 			},
-			want: []*circleci.ProjectVariable{},
+			want:  []*circleci.ProjectVariable{},
+			want1: []string{"ENV_0", "ENV_1", "ENV_2"},
 		},
 		{
 			name: "no vars",
@@ -71,13 +81,18 @@ func Test_getIntersection(t *testing.T) {
 					&circleci.ProjectVariable{Name: "ENV_0", Value: "xxxxenv"},
 				},
 			},
-			want: []*circleci.ProjectVariable{},
+			want:  []*circleci.ProjectVariable{},
+			want1: []string{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getIntersection(tt.args.vars, tt.args.items); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getIntersection() = %v, want %v", got, tt.want)
+			got, got1 := getFoundAndNotFoundVariables(tt.args.vars, tt.args.items)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getDeletedAndNotDeletedVariables() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("getDeletedAndNotDeletedVariables() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}
