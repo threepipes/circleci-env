@@ -159,10 +159,7 @@ func (c *Client) DeleteVariables(ctx context.Context, vars []string) error {
 }
 
 func (c *Client) UpdateOrCreateVariable(ctx context.Context, key string, val string) error {
-	v, err := c.ci.Projects.GetVariable(ctx, c.projectSlug, key)
-	if err != nil {
-		return fmt.Errorf("update or create variable for key=%s: %w", key, err)
-	}
+	v, _ := c.ci.Projects.GetVariable(ctx, c.projectSlug, key)
 	if v != nil {
 		fmt.Printf("key:%s already exists as value=%s\n", v.Name, v.Value)
 		yes, err := PromptYesNo("Do you want to overwrite?")
