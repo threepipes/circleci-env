@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/alecthomas/kong"
 	"github.com/sirupsen/logrus"
@@ -44,20 +45,41 @@ func (l *LsCmd) Run(c *Context) error {
 }
 
 type AddCmd struct {
-	Name  string `arg:"" name:"name" help:"Environment variable name to be add."`
-	Value string `arg:"" name:"value" help:"Environment variable value to be add."`
+	Name  string `arg:"" name:"name" help:"An environment variable name to be added."`
+	Value string `arg:"" name:"value" help:"An environment variable value to be added."`
 }
 
 func (l *AddCmd) Run(c *Context) error {
 	return c.client.UpdateOrCreateVariable(c.ctx, l.Name, l.Value)
 }
 
-var cmd struct {
-	Repo string `required:"" short:"r" help:"Set your target repository name."`
+type InitConfig struct {
+}
 
-	Rm  RmCmd  `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
-	Ls  LsCmd  `cmd:"" help:"List environment variables."`
-	Add AddCmd `cmd:"" help:"Add an environment variable."`
+func (l *InitConfig) Run(c *Context) error {
+	org, err := cli.ReadInput("Please set your default GitHub organization: ")
+	if err != nil {
+		return err
+	}
+	token, err := cli.ReadSecret("Please set your personal API token: ")
+	if err != nil {
+		return err
+	}
+	cfg := cli.Config{
+		OrganizationName: org,
+		ApiToken:         token,
+	}
+	return cli.WriteConfig(&cfg)
+}
+
+var cmd struct {
+	Org  string `short:"o" help:"Set your CircleCI organization name. If not specified, the default value is used."`
+	Repo string `short:"r" help:"Set your target repository name. If not specified, the current directory name is used."`
+
+	Rm     RmCmd      `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
+	Ls     LsCmd      `cmd:"" help:"List environment variables."`
+	Add    AddCmd     `cmd:"" help:"Add an environment variable."`
+	Config InitConfig `cmd:"" help:"Initialize ccienv configurations"`
 }
 
 func handleErr(err error) {
@@ -68,16 +90,31 @@ func handleErr(err error) {
 	}
 }
 
+func getDefaultRepoName() string {
+	path, err := os.Getwd()
+	handleErr(err)
+	return filepath.Base(path)
+}
+
 func constructProjectSlug(org string, repo string) string {
 	return fmt.Sprintf("gh/%s/%s", org, repo)
 }
 
 func main() {
-	cfg, err := cli.SetConfigFromEnv()
+	cfg, err := cli.SetConfig()
 	handleErr(err)
 	kc := kong.Parse(&cmd)
 
-	slug := constructProjectSlug(cfg.CircleciOrganizationName, cmd.Repo)
+	repo := cmd.Repo
+	if repo == "" {
+		repo = getDefaultRepoName()
+	}
+	org := cmd.Org
+	if org == "" {
+		org = cfg.OrganizationName
+	}
+
+	slug := constructProjectSlug(org, repo)
 	client, err := cli.NewClient(cfg, slug)
 	handleErr(err)
 

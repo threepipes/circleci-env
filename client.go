@@ -15,7 +15,7 @@ type Client struct {
 
 func NewClient(cfg *Config, prj string) (*Client, error) {
 	config := circleci.DefaultConfig()
-	config.Token = cfg.CircleciApiToken
+	config.Token = cfg.ApiToken
 	ci, err := circleci.NewClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("new client: %w", err)

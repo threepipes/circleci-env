@@ -15,13 +15,17 @@ go install github.com/threepipes/circleci-env/cmd/ccienv@latest
 rm $(which ccienv)
 ```
 
-## Setup local environment
+## Setup
 
-These environment variables are required.
+```
+ccienv config
+```
 
-- CIRCLECI_API_TOKEN
+Set these variables.
+
+- CircleCI API Token
     - A personal API token of CircleCI
-- CIRCLECI_ORGANIZATION_NAME
+- GitHub organization
     - GitHub organization name or GitHub username of your repository
 
 ## Run
@@ -29,6 +33,8 @@ These environment variables are required.
 ```
 ccienv -r <your_repo_name> <cmd> [<args>]
 ```
+
+If `<your_repo_name>` is omitted, the current directory name is used as the repository name.
 
 ### Example
 

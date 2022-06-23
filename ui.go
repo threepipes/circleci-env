@@ -18,15 +18,39 @@ func PromptYesNo(msg string) (bool, error) {
 	return ans, nil
 }
 
-func SelectFromList(mst string, ls []string) ([]string, error) {
+func SelectFromList(msg string, ls []string) ([]string, error) {
 	ans := []string{}
 	pmt := &survey.MultiSelect{
-		Message: mst,
+		Message: msg,
 		Options: ls,
 	}
 	err := survey.AskOne(pmt, &ans)
 	if err != nil {
 		return nil, fmt.Errorf("select from list: %w", err)
+	}
+	return ans, nil
+}
+
+func ReadSecret(msg string) (string, error) {
+	ans := ""
+	pmt := &survey.Password{
+		Message: msg,
+	}
+	err := survey.AskOne(pmt, &ans)
+	if err != nil {
+		return "", fmt.Errorf("read secret: %w", err)
+	}
+	return ans, nil
+}
+
+func ReadInput(msg string) (string, error) {
+	ans := ""
+	pmt := &survey.Input{
+		Message: msg,
+	}
+	err := survey.AskOne(pmt, &ans)
+	if err != nil {
+		return "", fmt.Errorf("read input: %w", err)
 	}
 	return ans, nil
 }
