@@ -2,7 +2,10 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/grezar/go-circleci"
 	"github.com/sirupsen/logrus"
@@ -11,6 +14,8 @@ import (
 type Client struct {
 	ci          *circleci.Client
 	projectSlug string
+
+	token string
 }
 
 func NewClient(cfg *Config, prj string) (*Client, error) {
@@ -23,6 +28,7 @@ func NewClient(cfg *Config, prj string) (*Client, error) {
 	return &Client{
 		ci:          ci,
 		projectSlug: prj,
+		token:       cfg.ApiToken,
 	}, nil
 }
 
@@ -191,5 +197,42 @@ func (c *Client) ListVariables(ctx context.Context) error {
 	if vars.NextPageToken != "" {
 		logrus.WithField("NextPageToken", vars.NextPageToken).Warn("Not all values are displayed")
 	}
+	return nil
+}
+
+func (c *Client) request(ctx context.Context, path string) ([]byte, error) {
+	url := fmt.Sprintf("https://circleci.com/api/v2/project/%s%s", c.projectSlug, path)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("request: %w", err)
+	}
+	req.Header.Add("Circle-Token", c.token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("request: %w", err)
+	}
+	return body, nil
+}
+
+func (c *Client) ShowProject(ctx context.Context) error {
+	body, err := c.request(ctx, "")
+	if err != nil {
+		return fmt.Errorf("show project: %w", err)
+	}
+	var v interface{}
+	if err := json.Unmarshal(body, &v); err != nil {
+		return fmt.Errorf("show project: %w", err)
+	}
+	bt, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("show project: %w", err)
+	}
+	fmt.Println(string(bt))
 	return nil
 }

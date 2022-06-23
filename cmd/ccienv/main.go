@@ -72,14 +72,22 @@ func (l *InitConfig) Run(c *Context) error {
 	return cli.WriteConfig(&cfg)
 }
 
+type ProjectCmd struct {
+}
+
+func (p *ProjectCmd) Run(c *Context) error {
+	return c.client.ShowProject(c.ctx)
+}
+
 var cmd struct {
 	Org  string `short:"o" help:"Set your CircleCI organization name. If not specified, the default value is used."`
 	Repo string `short:"r" help:"Set your target repository name. If not specified, the current directory name is used."`
 
-	Rm     RmCmd      `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
-	Ls     LsCmd      `cmd:"" help:"List environment variables."`
-	Add    AddCmd     `cmd:"" help:"Add an environment variable."`
-	Config InitConfig `cmd:"" help:"Initialize ccienv configurations"`
+	Rm      RmCmd      `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
+	Ls      LsCmd      `cmd:"" help:"List environment variables."`
+	Add     AddCmd     `cmd:"" help:"Add an environment variable."`
+	Config  InitConfig `cmd:"" help:"Initialize ccienv configurations."`
+	Project ProjectCmd `cmd:"" help:"Get project information."`
 }
 
 func handleErr(err error) {
