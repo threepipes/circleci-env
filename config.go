@@ -34,7 +34,7 @@ func SetConfig() (*Config, error) {
 	viper.AddConfigPath(cp)
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			logrus.Errorln("No config is found. Please execute `ccienv config`")
+			logrus.Errorln("No config is found. Please execute `ccienv config init`")
 			return nil, fmt.Errorf("no settings found")
 		} else {
 			return nil, fmt.Errorf("read config from a config file: %w", err)

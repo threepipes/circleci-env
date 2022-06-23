@@ -18,7 +18,7 @@ rm $(which ccienv)
 ## Setup
 
 ```
-ccienv config
+ccienv config init
 ```
 
 Set these variables.
