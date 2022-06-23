@@ -34,7 +34,7 @@ Set these variables.
 ccienv -r <your_repo_name> <cmd> [<args>]
 ```
 
-If `<your_repo_name>` is omitted, the current directory name is used as the repository name.
+If `-r <your_repo_name>` is omitted, the current directory name is used as the target repository name.
 
 ### Example
 
