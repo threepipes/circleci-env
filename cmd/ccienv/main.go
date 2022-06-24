@@ -80,9 +80,9 @@ func constructProjectSlug(org string, repo string) string {
 }
 
 func main() {
+	kc := kong.Parse(&cmd)
 	cfg, err := cli.SetConfig()
 	handleErr(err)
-	kc := kong.Parse(&cmd)
 
 	repo := cmd.Repo
 	if repo == "" {
