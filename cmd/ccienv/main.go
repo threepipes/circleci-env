@@ -18,18 +18,20 @@ type RmCmd struct {
 }
 
 func (r *RmCmd) Run(c *command.Context) error {
+	client, err := getClient()
+	handleErr(err)
 	if len(r.Envs) > 0 && r.Interactive {
 		fmt.Println("InvalidArgumentError: Do not specify both args `envs` and `-i, --interactive` in `rm` command.")
 		return nil
 	}
 	if r.Interactive {
-		return c.Client.DeleteVariablesInteractive(c.Ctx)
+		return client.DeleteVariablesInteractive(c.Ctx)
 	} else {
 		if len(r.Envs) == 0 {
 			fmt.Println("InvalidArgumentError: Please specify at least one environment variable or set `-i`.")
 			return nil
 		}
-		return c.Client.DeleteVariables(c.Ctx, r.Envs)
+		return client.DeleteVariables(c.Ctx, r.Envs)
 	}
 }
 
@@ -37,7 +39,9 @@ type LsCmd struct {
 }
 
 func (l *LsCmd) Run(c *command.Context) error {
-	return c.Client.ListVariables(c.Ctx)
+	client, err := getClient()
+	handleErr(err)
+	return client.ListVariables(c.Ctx)
 }
 
 type AddCmd struct {
@@ -46,7 +50,22 @@ type AddCmd struct {
 }
 
 func (l *AddCmd) Run(c *command.Context) error {
-	return c.Client.UpdateOrCreateVariable(c.Ctx, l.Name, l.Value)
+	client, err := getClient()
+	handleErr(err)
+	return client.UpdateOrCreateVariable(c.Ctx, l.Name, l.Value)
+}
+
+type ProjectCmd struct {
+	Show ProjectShowCmd `cmd:"" help:"Show the project information for the repository."`
+}
+
+type ProjectShowCmd struct {
+}
+
+func (p *ProjectShowCmd) Run(c *command.Context) error {
+	client, err := getClient()
+	handleErr(err)
+	return client.ShowProject(c.Ctx)
 }
 
 var cmd struct {
@@ -57,8 +76,8 @@ var cmd struct {
 	Ls  LsCmd  `cmd:"" help:"List environment variables."`
 	Add AddCmd `cmd:"" help:"Add an environment variable."`
 
-	Config  command.ConfigCmd  `cmd:"" help:"Commands for ccienv configurations."`
-	Project command.ProjectCmd `cmd:"" help:"Commands for CircleCI projects."`
+	Config  command.ConfigCmd `cmd:"" help:"Commands for ccienv configurations."`
+	Project ProjectCmd        `cmd:"" help:"Commands for CircleCI projects."`
 }
 
 func handleErr(err error) {
@@ -79,10 +98,11 @@ func constructProjectSlug(org string, repo string) string {
 	return fmt.Sprintf("gh/%s/%s", org, repo)
 }
 
-func main() {
+func getClient() (*cli.Client, error) {
 	cfg, err := cli.SetConfig()
-	handleErr(err)
-	kc := kong.Parse(&cmd)
+	if err != nil {
+		return nil, err
+	}
 
 	repo := cmd.Repo
 	if repo == "" {
@@ -95,12 +115,18 @@ func main() {
 
 	slug := constructProjectSlug(org, repo)
 	client, err := cli.NewClient(cfg, slug)
-	handleErr(err)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+func main() {
+	kc := kong.Parse(&cmd)
 
 	ctx := context.Background()
-	err = kc.Run(&command.Context{
-		Ctx:    ctx,
-		Client: client,
+	err := kc.Run(&command.Context{
+		Ctx: ctx,
 	})
 	handleErr(err)
 }
