@@ -11,9 +11,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//go:generate mockgen -source=$GOFILE -package=mock_$GOPACKAGE -destination=mock/$GOPACKAGE/$GOFILE
+type UI interface {
+	YesNo(msg string) (bool, error)
+	SelectFromList(msg string, ls []string) ([]string, error)
+	ReadSecret(msg string) (string, error)
+	ReadInput(msg string) (string, error)
+}
+
 type Client struct {
 	ci          *circleci.Client
 	projectSlug string
+	ui          UI
 
 	token string
 }
@@ -28,6 +37,7 @@ func NewClient(cfg *Config, prj string) (*Client, error) {
 	return &Client{
 		ci:          ci,
 		projectSlug: prj,
+		ui:          &Prompt{},
 		token:       cfg.ApiToken,
 	}, nil
 }
@@ -87,7 +97,7 @@ func (c *Client) deleteVariables(ctx context.Context, dels []*circleci.ProjectVa
 	dumpVariables(dels)
 	fmt.Println()
 
-	yes, err := PromptYesNo("Do you want to continue?")
+	yes, err := c.ui.YesNo("Do you want to continue?")
 	if err != nil {
 		return fmt.Errorf("delete vars: %w", err)
 	}
@@ -116,8 +126,6 @@ func makeReverseResolutionMap(vs []string) map[string]int {
 }
 
 func (c *Client) DeleteVariablesInteractive(ctx context.Context) error {
-	// Should be tested
-
 	pv, err := c.ci.Projects.ListVariables(ctx, c.projectSlug)
 	if err != nil {
 		return fmt.Errorf("delete vars: %w", err)
@@ -126,7 +134,7 @@ func (c *Client) DeleteVariablesInteractive(ctx context.Context) error {
 		logrus.Warn("Warning! Not all variables are listed.")
 	}
 	spv := convertToString(pv.Items)
-	sel, err := SelectFromList("Choose variables to be deleted.", spv)
+	sel, err := c.ui.SelectFromList("Choose variables to be deleted.", spv)
 	if err != nil {
 		return fmt.Errorf("delete vars: %w", err)
 	}
@@ -168,7 +176,7 @@ func (c *Client) UpdateOrCreateVariable(ctx context.Context, key string, val str
 	v, _ := c.ci.Projects.GetVariable(ctx, c.projectSlug, key)
 	if v != nil {
 		fmt.Printf("key:%s already exists as value=%s\n", v.Name, v.Value)
-		yes, err := PromptYesNo("Do you want to overwrite?")
+		yes, err := c.ui.YesNo("Do you want to overwrite?")
 		if err != nil {
 			return err
 		}

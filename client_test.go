@@ -1,10 +1,17 @@
 package cli
 
 import (
+	"context"
+	"net/http"
 	"reflect"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	mock_cli "github.com/threepipes/circleci-env/mock/cli"
+
 	"github.com/grezar/go-circleci"
+	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_getFoundAndNotFoundVariables(t *testing.T) {
@@ -95,5 +102,70 @@ func Test_getFoundAndNotFoundVariables(t *testing.T) {
 				t.Errorf("getDeletedAndNotDeletedVariables() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
+	}
+}
+
+const projectSlug = "gh/testorg/testprj"
+const apiBaseURL = "https://circleci.com/api/v2/project/" + projectSlug
+const testAPIToken = "testtoken"
+
+func TestClient_DeleteVariablesInteractive(t *testing.T) {
+	config := circleci.DefaultConfig()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	expectedListURL := apiBaseURL + "/envvar"
+	expectedDeleteURLs := []string{
+		apiBaseURL + "/envvar/BAR",
+		apiBaseURL + "/envvar/TEST1",
+	}
+
+	pvl := circleci.ProjectVariableList{
+		Items: []*circleci.ProjectVariable{
+			&circleci.ProjectVariable{Name: "FOO", Value: "xxxx_foo"},
+			&circleci.ProjectVariable{Name: "BAR", Value: "xxxx_bar"},
+			&circleci.ProjectVariable{Name: "TEST0", Value: "xxxxtest"},
+			&circleci.ProjectVariable{Name: "TEST1", Value: "xxxxest1"},
+			&circleci.ProjectVariable{Name: "TEST2", Value: "xxxxest2"},
+		},
+	}
+
+	listResp, err := httpmock.NewJsonResponder(200, pvl)
+	if err != nil {
+		t.Error(err)
+	}
+	httpmock.RegisterResponder("GET", expectedListURL, listResp)
+
+	for _, d := range expectedDeleteURLs {
+		httpmock.RegisterResponder("DELETE", d,
+			httpmock.NewStringResponder(200, `{"message":"OK"}`))
+	}
+
+	ctrl := gomock.NewController(t)
+	ui := mock_cli.NewMockUI(ctrl)
+	spv := convertToString(pvl.Items)
+	ui.EXPECT().SelectFromList(gomock.Any(), spv).Return([]string{spv[1], spv[3]}, nil)
+	ui.EXPECT().YesNo(gomock.Any()).Return(true, nil)
+
+	config.HTTPClient = http.DefaultClient
+	config.Token = testAPIToken
+	ci, err := circleci.NewClient(config)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c := &Client{
+		ci:          ci,
+		projectSlug: projectSlug,
+		ui:          ui,
+		token:       testAPIToken,
+	}
+	if err := c.DeleteVariablesInteractive(context.Background()); err != nil {
+		t.Error(err)
+	}
+	info := httpmock.GetCallCountInfo()
+	assert.Equal(t, 1, info["GET "+expectedListURL], "Expected number of list API call is wrong")
+	for _, d := range expectedDeleteURLs {
+		assert.Equal(t, 1, info["DELETE "+d], "Expected number of delete API call is wrong")
 	}
 }

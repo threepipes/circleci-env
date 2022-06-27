@@ -12,11 +12,12 @@ type ConfigInitCmd struct {
 }
 
 func (l *ConfigInitCmd) Run(c *Context) error {
-	org, err := cli.ReadInput("Please set your default GitHub organization: ")
+	prompt := cli.Prompt{}
+	org, err := prompt.ReadInput("Please set your default GitHub organization: ")
 	if err != nil {
 		return err
 	}
-	token, err := cli.ReadSecret("Please set your personal API token: ")
+	token, err := prompt.ReadSecret("Please set your personal API token: ")
 	if err != nil {
 		return err
 	}

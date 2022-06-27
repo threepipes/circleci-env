@@ -6,7 +6,12 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 )
 
-func PromptYesNo(msg string) (bool, error) {
+type Prompt struct {
+}
+
+var _ UI = &Prompt{}
+
+func (p *Prompt) YesNo(msg string) (bool, error) {
 	ans := false
 	pmt := &survey.Confirm{
 		Message: msg,
@@ -18,7 +23,7 @@ func PromptYesNo(msg string) (bool, error) {
 	return ans, nil
 }
 
-func SelectFromList(msg string, ls []string) ([]string, error) {
+func (p *Prompt) SelectFromList(msg string, ls []string) ([]string, error) {
 	ans := []string{}
 	pmt := &survey.MultiSelect{
 		Message: msg,
@@ -31,7 +36,7 @@ func SelectFromList(msg string, ls []string) ([]string, error) {
 	return ans, nil
 }
 
-func ReadSecret(msg string) (string, error) {
+func (p *Prompt) ReadSecret(msg string) (string, error) {
 	ans := ""
 	pmt := &survey.Password{
 		Message: msg,
@@ -43,7 +48,7 @@ func ReadSecret(msg string) (string, error) {
 	return ans, nil
 }
 
-func ReadInput(msg string) (string, error) {
+func (p *Prompt) ReadInput(msg string) (string, error) {
 	ans := ""
 	pmt := &survey.Input{
 		Message: msg,
