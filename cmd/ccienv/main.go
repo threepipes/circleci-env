@@ -18,7 +18,7 @@ type RmCmd struct {
 }
 
 func (r *RmCmd) Run(c *command.Context) error {
-	client, err := getClient()
+	client, err := c.ClientGenerator()
 	handleErr(err)
 	if len(r.Envs) > 0 && r.Interactive {
 		fmt.Println("InvalidArgumentError: Do not specify both args `envs` and `-i, --interactive` in `rm` command.")
@@ -39,7 +39,7 @@ type LsCmd struct {
 }
 
 func (l *LsCmd) Run(c *command.Context) error {
-	client, err := getClient()
+	client, err := c.ClientGenerator()
 	handleErr(err)
 	return client.ListVariables(c.Ctx)
 }
@@ -50,22 +50,9 @@ type AddCmd struct {
 }
 
 func (l *AddCmd) Run(c *command.Context) error {
-	client, err := getClient()
+	client, err := c.ClientGenerator()
 	handleErr(err)
 	return client.UpdateOrCreateVariable(c.Ctx, l.Name, l.Value)
-}
-
-type ProjectCmd struct {
-	Show ProjectShowCmd `cmd:"" help:"Show the project information for the repository."`
-}
-
-type ProjectShowCmd struct {
-}
-
-func (p *ProjectShowCmd) Run(c *command.Context) error {
-	client, err := getClient()
-	handleErr(err)
-	return client.ShowProject(c.Ctx)
 }
 
 var cmd struct {
@@ -76,8 +63,8 @@ var cmd struct {
 	Ls  LsCmd  `cmd:"" help:"List environment variables."`
 	Add AddCmd `cmd:"" help:"Add an environment variable."`
 
-	Config  command.ConfigCmd `cmd:"" help:"Commands for ccienv configurations."`
-	Project ProjectCmd        `cmd:"" help:"Commands for CircleCI projects."`
+	Config  command.ConfigCmd  `cmd:"" help:"Commands for ccienv configurations."`
+	Project command.ProjectCmd `cmd:"" help:"Commands for CircleCI projects."`
 }
 
 func handleErr(err error) {
@@ -99,7 +86,7 @@ func constructProjectSlug(org string, repo string) string {
 }
 
 func getClient() (*cli.Client, error) {
-	cfg, err := cli.SetConfig()
+	cfg, err := cli.ReadConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +113,8 @@ func main() {
 
 	ctx := context.Background()
 	err := kc.Run(&command.Context{
-		Ctx: ctx,
+		Ctx:             ctx,
+		ClientGenerator: getClient,
 	})
 	handleErr(err)
 }

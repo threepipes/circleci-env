@@ -24,7 +24,7 @@ func getConfigPath() (string, error) {
 	return dir + "/.ccienv/config.yml", nil
 }
 
-func SetConfig() (*Config, error) {
+func ReadConfig() (*Config, error) {
 	cp, err := getConfigPath()
 	cp = filepath.Dir(cp)
 	if err != nil {
