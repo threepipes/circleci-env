@@ -6,7 +6,7 @@ A management tool for CircleCI Project's environment variables.
 ## Installation
 
 ```
-go install github.com/threepipes/circleci-env/cmd/ccienv@1.2.3
+go install github.com/threepipes/circleci-env/cmd/ccienv@1.3.0
 ```
 
 ### Uninstallation
@@ -14,6 +14,11 @@ go install github.com/threepipes/circleci-env/cmd/ccienv@1.2.3
 ```
 rm $(which ccienv)
 ```
+
+## Requirements
+
+- git
+    - Only if load repository name from .git
 
 ## Setup
 
