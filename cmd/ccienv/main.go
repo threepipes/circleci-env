@@ -15,56 +15,13 @@ import (
 	command "github.com/threepipes/circleci-env/commands"
 )
 
-type RmCmd struct {
-	Envs        []string `arg:"" optional:"" name:"env_name" help:"Environment variable names to remove."`
-	Interactive bool     `optional:"" name:"interactive" short:"i" help:"Launch interactive removal mode."`
-}
-
-func (r *RmCmd) Run(c *command.Context) error {
-	client, err := c.ClientGenerator()
-	handleErr(err)
-	if len(r.Envs) > 0 && r.Interactive {
-		fmt.Println("InvalidArgumentError: Do not specify both args `envs` and `-i, --interactive` in `rm` command.")
-		return nil
-	}
-	if r.Interactive {
-		return client.DeleteVariablesInteractive(c.Ctx)
-	} else {
-		if len(r.Envs) == 0 {
-			fmt.Println("InvalidArgumentError: Please specify at least one environment variable or set `-i`.")
-			return nil
-		}
-		return client.DeleteVariables(c.Ctx, r.Envs)
-	}
-}
-
-type LsCmd struct {
-}
-
-func (l *LsCmd) Run(c *command.Context) error {
-	client, err := c.ClientGenerator()
-	handleErr(err)
-	return client.ListVariables(c.Ctx)
-}
-
-type AddCmd struct {
-	Name  string `arg:"" name:"name" help:"An environment variable name to be added."`
-	Value string `arg:"" name:"value" help:"An environment variable value to be added."`
-}
-
-func (l *AddCmd) Run(c *command.Context) error {
-	client, err := c.ClientGenerator()
-	handleErr(err)
-	return client.UpdateOrCreateVariable(c.Ctx, l.Name, l.Value)
-}
-
 var cmd struct {
 	Org  string `short:"o" help:"Set your CircleCI organization name. If not specified, the default value is used."`
 	Repo string `short:"r" help:"Set your target repository name. If not specified, the current directory name is used."`
 
-	Rm  RmCmd  `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
-	Ls  LsCmd  `cmd:"" help:"List environment variables."`
-	Add AddCmd `cmd:"" help:"Add an environment variable."`
+	Rm  command.RmCmd  `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
+	Ls  command.LsCmd  `cmd:"" help:"List environment variables."`
+	Add command.AddCmd `cmd:"" help:"Add an environment variable."`
 
 	Config  command.ConfigCmd  `cmd:"" help:"Commands for ccienv configurations."`
 	Project command.ProjectCmd `cmd:"" help:"Commands for CircleCI projects."`
@@ -111,7 +68,7 @@ func constructProjectSlug(org string, repo string) string {
 func getClient() (*cli.Client, error) {
 	cfg, err := cli.ReadConfig()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get client: %w", err)
 	}
 
 	org := cmd.Org
@@ -126,7 +83,7 @@ func getClient() (*cli.Client, error) {
 	slug := constructProjectSlug(org, repo)
 	client, err := cli.NewClient(cfg, slug)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get client: %w", err)
 	}
 	return client, nil
 }
