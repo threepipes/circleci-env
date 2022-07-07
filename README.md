@@ -3,6 +3,8 @@
 A management tool for CircleCI Project's environment variables.  
 (Currently, only available on GitHub)
 
+This repository will be archived if [this issue](https://github.com/CircleCI-Public/circleci-cli/issues/652) is closed.
+
 ## Installation
 
 ```
