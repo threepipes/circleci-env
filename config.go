@@ -21,7 +21,7 @@ func getConfigPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get config path: %w", err)
 	}
-	return dir + "/.ccienv/config.yml", nil
+	return dir + "/.config/ccienv/config.yml", nil
 }
 
 func ReadConfig() (*Config, error) {
