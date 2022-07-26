@@ -8,7 +8,7 @@ This repository will be supported until the official circleci-cli will support t
 ## Installation
 
 ```
-go install github.com/threepipes/circleci-env/cmd/ccienv@1.3.0
+go install github.com/threepipes/circleci-env/cmd/ccienv@latest
 ```
 
 ### Uninstallation
