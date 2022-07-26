@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/adrg/xdg"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -17,11 +18,8 @@ type Config struct {
 }
 
 func getConfigPath() (string, error) {
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("get config path: %w", err)
-	}
-	return dir + "/.ccienv/config.yml", nil
+	dir := xdg.ConfigHome
+	return dir + "/ccienv/config.yml", nil
 }
 
 func ReadConfig() (*Config, error) {
