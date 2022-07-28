@@ -35,8 +35,11 @@ func handleErr(err error) {
 	}
 }
 
-func extractRepoName(repo string) (string, string, error) {
-	r := regexp.MustCompile(`.+github\.com[:/]([^/]+)/(.+)\.git/?$`)
+func extractRepoName(uri string) (string, string, error) {
+	repo_uri := strings.TrimSpace(string(uri))
+	rm_suffix := regexp.MustCompile(`.git$`)
+	repo := rm_suffix.ReplaceAllString(repo_uri, "")
+	r := regexp.MustCompile(`.+github\.com[:/]([^/]+)/(.+)/?$`)
 	match := r.FindStringSubmatch(repo)
 	if len(match) < 3 {
 		return "", "", fmt.Errorf("failed to parse repo name: %v", repo)
