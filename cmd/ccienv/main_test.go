@@ -38,6 +38,30 @@ func Test_extractRepoName(t *testing.T) {
 			want1: "user",
 		},
 		{
+			name: "https url (omitted .git suffix)",
+			args: args{
+				repo: "https://github.com/user/repo",
+			},
+			want:  "repo",
+			want1: "user",
+		},
+		{
+			name: "https url containing '.git' in repo name",
+			args: args{
+				repo: "https://github.com/user/repo.git.repo.git",
+			},
+			want:  "repo.git.repo",
+			want1: "user",
+		},
+		{
+			name: "https url containing '.git' in repo name (omitted .git suffix)",
+			args: args{
+				repo: "https://github.com/user/repo.git.repo",
+			},
+			want:  "repo.git.repo",
+			want1: "user",
+		},
+		{
 			name: "error pattern",
 			args: args{
 				repo: "repo.git",
