@@ -24,7 +24,7 @@ func Test_extractRepoName(t *testing.T) {
 		{
 			name: "trailing slash",
 			args: args{
-				repo: "git@github.com:threepipes/circleci-env.git",
+				repo: "git@github.com:threepipes/circleci-env.git/",
 			},
 			want:  "circleci-env",
 			want1: "threepipes",
@@ -35,6 +35,30 @@ func Test_extractRepoName(t *testing.T) {
 				repo: "https://github.com/user/repo.git",
 			},
 			want:  "repo",
+			want1: "user",
+		},
+		{
+			name: "https url (.git suffix omitted)",
+			args: args{
+				repo: "https://github.com/user/repo",
+			},
+			want:  "repo",
+			want1: "user",
+		},
+		{
+			name: "https url containing '.git' in repo name",
+			args: args{
+				repo: "https://github.com/user/repo.git.repo.git",
+			},
+			want:  "repo.git.repo",
+			want1: "user",
+		},
+		{
+			name: "https url containing '.git' in repo name (.git suffix omitted)",
+			args: args{
+				repo: "https://github.com/user/repo.git.repo",
+			},
+			want:  "repo.git.repo",
 			want1: "user",
 		},
 		{
