@@ -24,7 +24,7 @@ func Test_extractRepoName(t *testing.T) {
 		{
 			name: "trailing slash",
 			args: args{
-				repo: "git@github.com:threepipes/circleci-env.git",
+				repo: "git@github.com:threepipes/circleci-env.git/",
 			},
 			want:  "circleci-env",
 			want1: "threepipes",
