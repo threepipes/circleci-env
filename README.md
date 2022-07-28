@@ -35,6 +35,8 @@ Set these variables.
 - GitHub organization
     - GitHub organization name or GitHub username of your repository
 
+Then, `$XDG_CONFIG_HOME/ccienv/config.yml` will be created.
+
 ## Run
 
 ```
