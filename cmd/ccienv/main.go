@@ -36,9 +36,9 @@ func handleErr(err error) {
 }
 
 func extractRepoName(uri string) (string, string, error) {
-	repo_uri := strings.TrimSpace(string(uri))
-	rm_suffix := regexp.MustCompile(`.git$`)
-	repo := rm_suffix.ReplaceAllString(repo_uri, "")
+	repoURI := strings.TrimSpace(string(uri))
+	rmSuffix := regexp.MustCompile(`.git$`)
+	repo := rmSuffix.ReplaceAllString(repoURI, "")
 	r := regexp.MustCompile(`.+github\.com[:/]([^/]+)/(.+)/?$`)
 	match := r.FindStringSubmatch(repo)
 	if len(match) < 3 {
