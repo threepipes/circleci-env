@@ -17,7 +17,7 @@ import (
 
 var cmd struct {
 	Org  string `short:"o" help:"Set your CircleCI organization name. If not specified, the default value is used."`
-	Repo string `short:"r" help:"Set your target repository name. If not specified, the current directory name is used."`
+	Repo string `short:"r" help:"Set your target repository name. If not specified, the origin URL of the current directory's git project is used."`
 
 	Rm  command.RmCmd  `cmd:"" help:"Remove environment variables. Either environment variables or the interactive flag must be specified."`
 	Ls  command.LsCmd  `cmd:"" help:"List environment variables."`
