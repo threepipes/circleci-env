@@ -43,7 +43,7 @@ Then, `$XDG_CONFIG_HOME/ccienv/config.yml` will be created.
 ccienv -r <your_repo_name> <cmd> [<args>]
 ```
 
-If `-r <your_repo_name>` is omitted, the current directory name is used as the target repository name.
+If `-r <your_repo_name>` is omitted, the origin URL of the current directory's git project is used to specify the target repository.
 
 ### Example
 
